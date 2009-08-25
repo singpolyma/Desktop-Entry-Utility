@@ -91,6 +91,8 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
+	fclose(fp);
+
 	switch(s) {
 		case '\0':
 			/* If we ever support %U or %F, this will suck */
