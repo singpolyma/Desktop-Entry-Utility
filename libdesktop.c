@@ -62,7 +62,7 @@ int desktop_read_file(struct DesktopEntry *d, FILE *fp) {
 	return 0;
 }
 
-void desktop_exec(struct DesktopEntry entry, int (*cb)(const char *)) {
+int desktop_exec(struct DesktopEntry entry, int (*cb)(const char *)) {
 	size_t length = strlen(entry.Exec);
 	size_t size = length * 2;
 	char *s = malloc(length * 2 * sizeof(*s));
@@ -143,5 +143,5 @@ void desktop_exec(struct DesktopEntry entry, int (*cb)(const char *)) {
 		s[c] = '\0';
 	}
 
-	cb(s);
+	return cb(s);
 }
