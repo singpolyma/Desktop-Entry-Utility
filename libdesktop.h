@@ -6,7 +6,7 @@ struct DesktopEntry {
 	char *GenericName;
 	char *TryExec;
 	char *Exec;
-	char *Folder;
+	char *Path;
 	char *Icon;
 	char *_path;
 };

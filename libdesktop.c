@@ -53,7 +53,7 @@ int desktop_read_file(struct DesktopEntry *d, FILE *fp) {
 		else
 		KEY_TO_STRUCT(Exec);
 		else
-		KEY_TO_STRUCT(Folder);
+		KEY_TO_STRUCT(Path);
 		else
 		KEY_TO_STRUCT(Icon);
 	}

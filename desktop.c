@@ -135,6 +135,10 @@ int main(int argc, char *argv[]) {
 
 	fclose(fp);
 
+	if(entry.Path) {
+		chdir(entry.Path);
+	}
+
 	switch(s) {
 		case '\0':
 			/* If we ever support %U or %F, this will suck */
