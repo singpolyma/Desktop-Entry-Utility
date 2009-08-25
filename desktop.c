@@ -3,9 +3,11 @@
 #include <string.h>
 
 #if defined(_WIN32) || defined(__WIN32__)
-   #include "getopt.h"
+	#include "getopt.h"
+	#define ENV_SEPERATOR ";"
 #else
-   #include <unistd.h>
+	#include <unistd.h>
+	#define ENV_SEPERATOR ":"
 #endif
 
 #include "libdesktop.h"
@@ -17,7 +19,7 @@ void help(char *name) {
 	puts("   PATH    Path to .desktop file");
 	puts("   -h      help (this screen)");
 	puts("   -o      output processed Exec line");
-	puts("   -t      exit status 0 on TryExec exists, 2 on doesn't exist, 1 on no such key");
+	puts("   -t      exit status EXIT_SUCCESS on TryExec exists, 2 on doesn't exist, EXIT_FAILURE on no such key");
 	puts("   -i      output absolute path to icon");
 	puts("   -n      output name");
 	puts("   -g      output generic name");
@@ -30,6 +32,46 @@ FILE *xfopen(char *pth, char *mode) {
 		exit(EXIT_FAILURE);
 	}
 	return fp;
+}
+
+int file_exists(const char *pth) {
+	FILE *fp;
+	fp = fopen(pth, "rb");
+	if(fp) { /* The file exists */
+		fclose(fp);
+		return 1;
+	}
+	return 0;
+}
+
+int in_path(const char *pth) {
+	char *env = strdup(getenv("PATH"));
+	char *tmp = malloc(255 * sizeof(*tmp));
+	char *tok = NULL;
+	size_t size = 255;
+	size_t pth_len = strlen(pth);
+	if(env && tmp) {
+		tok = strtok(env, ENV_SEPERATOR);
+		while(tok) {
+			if((tok = strtok(NULL, ENV_SEPERATOR))) {
+				if(size < pth_len+strlen(tok)+2) {
+					size *= 2;
+					tmp = realloc(tmp, size*sizeof(*tmp));
+				}
+				strcpy(tmp, tok);
+				strcat(tmp, "/");
+				strcat(tmp, pth);
+				if(file_exists(tmp)) {
+					free(env);
+					free(tmp);
+					return 1;
+				}
+			}
+		}
+		free(env);
+		free(tmp);
+	}
+	return 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -102,7 +144,14 @@ int main(int argc, char *argv[]) {
 			exit(desktop_exec(entry, &puts));
 			break;
 		case 't':
-			/* TODO */
+			if(entry.TryExec) {
+				if(file_exists(entry.TryExec) || in_path(entry.TryExec)) {
+					exit(EXIT_SUCCESS);
+				}
+				exit(2);
+			} else {
+				exit(EXIT_FAILURE);
+			}
 			break;
 		case 'i':
 			/* TODO */
