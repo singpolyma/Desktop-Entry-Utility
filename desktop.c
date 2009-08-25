@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #if defined(_WIN32) || defined(__WIN32__)
    #include "getopt.h"
@@ -35,7 +36,7 @@ int main(int argc, char *argv[]) {
 	int c;
 	char s = '\0';
 	FILE *fp = NULL;
-	struct DesktopEntry entry = {NULL,NULL,NULL,NULL,NULL,NULL};
+	struct DesktopEntry entry = {NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 
 	while((c = getopt(argc, argv, "-hoting")) != -1) {
 		switch(c) {
@@ -57,6 +58,7 @@ int main(int argc, char *argv[]) {
 					help(argv[0]);
 					exit(EXIT_FAILURE);
 				}
+				entry._path = strdup(optarg);
 				fp = xfopen(optarg, "r");
 				break;
 			case 'h':
@@ -70,6 +72,7 @@ int main(int argc, char *argv[]) {
 
 	/* On non-GNU systems, we won't have the arguments yet. */
 	if(fp == NULL && optind < argc) {
+		entry._path = strdup(argv[optind+1]);
 		fp = xfopen(argv[optind++], "r");
 	}
 
@@ -90,10 +93,11 @@ int main(int argc, char *argv[]) {
 
 	switch(s) {
 		case '\0':
-			/*desktop_exec(entry, cb);*/
+			/* If we ever support %U or %F, this will suck */
+			exit(desktop_exec(entry, &system));
 			break;
 		case 'o':
-			desktop_exec(entry, &puts);
+			exit(desktop_exec(entry, &puts));
 			break;
 		case 't':
 			/* TODO */

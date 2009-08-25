@@ -8,6 +8,7 @@ struct DesktopEntry {
 	char *Exec;
 	char *Folder;
 	char *Icon;
+	char *_path;
 };
 
 int desktop_read_file(struct DesktopEntry *d, FILE *fp);
