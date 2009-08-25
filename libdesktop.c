@@ -12,7 +12,7 @@ char *dynamic_fgets(char *line, size_t *size, FILE *fp) {
 		line = malloc(*size * sizeof(*line));
 		line[0] = '\0';
 	}
-	while(line[length-1] != '\n') {
+	do {
 		if(length > 0) {
 			*size *= 2;
 			if(!(line = realloc(line, *size))) {
@@ -21,10 +21,11 @@ char *dynamic_fgets(char *line, size_t *size, FILE *fp) {
 			}
 		}
 		if(!fgets((line+length), *size, fp)) {
+			free(line);
 			return NULL;
 		}
 		length += strlen(line+length);
-	}
+	} while(line[length-1] != '\n');
 	return line;
 }
 
@@ -143,5 +144,7 @@ int desktop_exec(struct DesktopEntry entry, int (*cb)(const char *)) {
 		s[c] = '\0';
 	}
 
-	return cb(s);
+	i = cb(s);
+	free(s);
+	return i;
 }
