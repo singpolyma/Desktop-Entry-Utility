@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 #if defined(_WIN32) || defined(__WIN32__)
 	#include "getopt.h"
@@ -157,9 +158,20 @@ int main(int argc, char *argv[]) {
 				exit(EXIT_FAILURE);
 			}
 			break;
-		case 'i':
-			/* TODO */
+		case 'i': {
+			char path[PATH_MAX];
+			if(entry.Icon) {
+				realpath(entry.Icon, path);
+				if(file_exists(path)) {
+					puts(path);
+					break;
+				}
+				/* TODO Implement http://standards.freedesktop.org/icon-theme-spec/icon-theme-spec-latest.html */
+			} else {
+				exit(EXIT_FAILURE);
+			}
 			break;
+		}
 		case 'n':
 			puts(entry.Name);
 			break;
