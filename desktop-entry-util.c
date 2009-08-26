@@ -142,11 +142,21 @@ int main(int argc, char *argv[]) {
 
 	switch(s) {
 		case '\0':
-			/* If we ever support %U or %F, this will suck */
-			exit(desktop_exec(entry, &system));
+			if(entry.Exec) {
+				/* If we ever support %U or %F, this will suck */
+				exit(desktop_exec(entry, &system));
+			} else {
+				fputs("No Exec line found.\n", stderr);
+				exit(EXIT_FAILURE);
+			}
 			break;
 		case 'o':
-			exit(desktop_exec(entry, &puts));
+			if(entry.Exec) {
+				exit(desktop_exec(entry, &puts));
+			} else {
+				fputs("No Exec line found.\n", stderr);
+				exit(EXIT_FAILURE);
+			}
 			break;
 		case 't':
 			if(entry.TryExec) {
