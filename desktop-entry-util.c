@@ -3,9 +3,26 @@
 #include <string.h>
 #include <limits.h>
 
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
+
 #if defined(_WIN32) || defined(__WIN32__)
 	#include "getopt.h"
 	#define ENV_SEPERATOR ";"
+
+	#include <windows.h>
+	char *realpath(const char *path, char *resolved_path) {
+		if(!resolved_path) {
+			resolved_path = malloc(PATH_MAX * sizeof(*resolved_path));
+		}
+		/* XXX If resolved_path was passed in and is too short, this is a bad idea. */
+		if(GetFullPathName(path, PATH_MAX, resolved_path, NULL)) {
+			return resolved_path;
+		}
+		return NULL;
+	}
+
 #else
 	#include <unistd.h>
 	#define ENV_SEPERATOR ":"
