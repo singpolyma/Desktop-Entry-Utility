@@ -97,6 +97,8 @@ int main(int argc, char *argv[]) {
 	char s = '\0';
 	FILE *fp = NULL;
 	struct DesktopEntry entry = {NULL,NULL,NULL,NULL,NULL,NULL,NULL};
+	char **other_args = NULL;
+	int num_other_args = 0;
 
 	while((c = getopt(argc, argv, "-hoting")) != -1) {
 		switch(c) {
@@ -114,12 +116,18 @@ int main(int argc, char *argv[]) {
 				break;
 			case '\1':
 				if(fp) {
-					fprintf(stderr, "Too many arguments: %s\n", optarg);
-					help(argv[0]);
-					exit(EXIT_FAILURE);
+					if(!other_args) {
+						other_args = malloc((argc-optind+1) * sizeof(*other_args));
+						if(!other_args) {
+							perror("main, malloc");
+							exit(EXIT_FAILURE);
+						}
+					}
+					other_args[num_other_args++] = strdup(optarg);
+				} else {
+					entry._path = strdup(optarg);
+					fp = xfopen(optarg, "r");
 				}
-				entry._path = strdup(optarg);
-				fp = xfopen(optarg, "r");
 				break;
 			case 'h':
 				help(argv[0]);
@@ -136,14 +144,20 @@ int main(int argc, char *argv[]) {
 		fp = xfopen(argv[optind++], "r");
 	}
 
-	if(optind < argc) {
-		fprintf(stderr, "Too many arguments: %s\n", optarg);
-		exit(EXIT_FAILURE);
-	}
-
 	if(!fp) {
 		fputs("Must specify a file to read from.\n", stderr);
 		exit(EXIT_FAILURE);
+	}
+
+	if(optind < argc) {
+		if(!other_args) {
+			other_args = malloc((argc-optind)+1 * sizeof(*other_args));
+			if(!other_args) {
+				perror("main, malloc");
+				exit(EXIT_FAILURE);
+			}
+		}
+		other_args[num_other_args++] = strdup(optarg);
 	}
 
 	if(desktop_read_file(&entry, fp)) {
@@ -161,7 +175,7 @@ int main(int argc, char *argv[]) {
 		case '\0':
 			if(entry.Exec) {
 				/* If we ever support %U or %F, this will suck */
-				exit(desktop_exec(entry, &system));
+				exit(desktop_exec(entry, &system, num_other_args, other_args));
 			} else {
 				fputs("No Exec line found.\n", stderr);
 				exit(EXIT_FAILURE);
@@ -169,7 +183,7 @@ int main(int argc, char *argv[]) {
 			break;
 		case 'o':
 			if(entry.Exec) {
-				exit(desktop_exec(entry, &puts));
+				exit(desktop_exec(entry, &puts, num_other_args, other_args));
 			} else {
 				fputs("No Exec line found.\n", stderr);
 				exit(EXIT_FAILURE);

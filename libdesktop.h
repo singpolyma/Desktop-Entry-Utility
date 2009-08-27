@@ -12,6 +12,6 @@ struct DesktopEntry {
 };
 
 int desktop_read_file(struct DesktopEntry *d, FILE *fp);
-int desktop_exec(struct DesktopEntry entry, int (*cb)(const char *));
+int desktop_exec(struct DesktopEntry entry, int (*cb)(const char *), int argc, char *argv[]);
 
 #endif

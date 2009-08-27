@@ -63,10 +63,17 @@ int desktop_read_file(struct DesktopEntry *d, FILE *fp) {
 	return 0;
 }
 
-int desktop_exec(struct DesktopEntry entry, int (*cb)(const char *)) {
+int desktop_exec(struct DesktopEntry entry, int (*cb)(const char *), int argc, char *argv[]) {
+	#define INCREASE_BUF(amount) do { if(c >= size) { \
+		size = (size+(amount))*2; \
+		if(!(s = realloc(s, size * sizeof(*s)))) { \
+			return -1; \
+		} \
+	} } while(0)
+
 	size_t length = strlen(entry.Exec);
 	size_t size = length * 2;
-	char *s = malloc(length * 2 * sizeof(*s));
+	char *s = malloc(size * sizeof(*s));
 	int is_symbol = 0;
 	unsigned int i, c = 0;
 
@@ -76,31 +83,42 @@ int desktop_exec(struct DesktopEntry entry, int (*cb)(const char *)) {
 		if(c+1 == size) {
 			size *= 2;
 			s = realloc(s, size * sizeof(*s));
+			if(!s) {
+				return -1;
+			}
 		}
 		if(is_symbol) {
 			switch(entry.Exec[i]) {
 				case '%':
 					s[c++] = entry.Exec[i];
 					break;
-				case 'f':
-					/* Not currently handling */
-					break;
-				case 'F':
-					/* Not currently handling */
-					break;
 				case 'u':
-					/* Not currently handling */
+				case 'f':
+					if(argv && argc > 0) {
+						c += 2+strlen(argv[0]);
+						INCREASE_BUF(3+strlen(argv[0]));
+						strcat(s, "'");
+						strcat(s, argv[0]);
+						strcat(s, "'");
+					}
 					break;
 				case 'U':
-					/* Not currently handling */
+				case 'F':
+					if(argv && argc > 0) {
+						int j;
+						for(j = 0; j < argc; j++) {
+							c += 3+strlen(argv[j]);
+							INCREASE_BUF(4+strlen(argv[j]));
+							strcat(s, "'");
+							strcat(s, argv[j]);
+							strcat(s, "' ");
+						}
+					}
 					break;
 				case 'i':
 					if(entry.Icon) {
 						c += 9+strlen(entry.Icon);
-						if(c > size) {
-							size = (size+9+strlen(entry.Icon))*2;
-							s = realloc(s, size * sizeof(*s));
-						}
+						INCREASE_BUF(10+strlen(entry.Icon));
 						strcat(s, "--icon '");
 						strcat(s, entry.Icon);
 						strcat(s, "'");
@@ -109,10 +127,7 @@ int desktop_exec(struct DesktopEntry entry, int (*cb)(const char *)) {
 				case 'c':
 					if(entry.Name) {
 						c += 2+strlen(entry.Name);
-						if(c > size) {
-							size = (size+2+strlen(entry.Name))*2;
-							s = realloc(s, size * sizeof(*s));
-						}
+						INCREASE_BUF(3+strlen(entry.Name));
 						strcat(s, "'");
 						strcat(s, entry.Name);
 						strcat(s, "'");
@@ -121,10 +136,7 @@ int desktop_exec(struct DesktopEntry entry, int (*cb)(const char *)) {
 				case 'k':
 					if(entry._path) {
 						c += 2+strlen(entry._path);
-						if(c > size) {
-							size = (size+2+strlen(entry._path))*2;
-							s = realloc(s, size * sizeof(*s));
-						}
+						INCREASE_BUF(3+strlen(entry._path));
 						strcat(s, "'");
 						strcat(s, entry._path);
 						strcat(s, "'");
