@@ -46,7 +46,7 @@ void help(char *name) {
 FILE *xfopen(char *pth, char *mode) {
 	FILE *fp;
 	if(!(fp = fopen(pth, mode))) {
-		fprintf(stderr, "Failed to open file '%s'", pth);
+		fprintf(stderr, "Failed to open file '%s'\n", pth);
 		exit(EXIT_FAILURE);
 	}
 	return fp;
